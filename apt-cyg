@@ -1,21 +1,28 @@
 #!/bin/bash
-# vim: set ts=2 sw=2 tw=0 et :
-#
 # apt-cyg: install tool for cygwin similar to debian apt-get
+
+# The MIT License (MIT)
 # 
-# Copyright (C) 2005-9, Stephen Jungels
+# Copyright (c) 2013 Trans-code Design
 # 
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 # 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 # 
-# (http://www.fsf.org/licensing/licenses/gpl.html)
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+# 
 
 # this script requires some packages
 if ! type awk bzip2 tar wget xz &>/dev/null
@@ -28,24 +35,25 @@ fi
 
 function usage () {
   rw=(
-    'usage: apt-cyg [command] [options] [packages]'
-    ''
-    'Commands:'
-    '   install <packages>   install packages'
-    '   remove <packages>    remove packages'
-    '   update               update setup.ini'
-    '   list [patterns]      list packages matching given pattern. If no'
-    '                        pattern is given, list all installed packages.'
-    '   show <patterns>      show packages matching patterns'
-    '   search <patterns>    search for a filename from installed packages'
-    ''
-    'Options:'
-    '   -c, --cache <dir>    set cache'
-    '   -f, --file <file>    read package names from file'
-    '   -m, --mirror <url>   set mirror'
-    '   -u, --noupdate       don’t update setup.ini from mirror'
-    '   --help'
-    '   --version'
+  'usage: apt-cyg [command] [options] [packages]'
+  ''
+  'Commands:'
+  '   install <packages>     install packages'
+  '   remove <packages>      remove packages'
+  '   update                 update setup.ini'
+  '   list [patterns]        list packages matching given pattern. If no'
+  '                          pattern is given, list all installed packages.'
+  '   show <patterns>        show packages matching patterns'
+  '   search <patterns>      search for a filename from installed packages'
+  '   searchall <patterns>   search for a filename from all available packages'
+  ''
+  'Options:'
+  '   -c, --cache <dir>      set cache'
+  '   -f, --file <file>      read package names from file'
+  '   -m, --mirror <url>     set mirror'
+  '   -u, --noupdate         don’t update setup.ini from mirror'
+  '   --help'
+  '   --version'
   )
   printf '%s\n' "${rw[@]}"
 }
@@ -170,7 +178,7 @@ do
       shift
     ;;
 
-    update | list | show | search | install | remove)
+    update | list | show | search | searchall | install | remove)
       if (( ${#command} ))
       then
         packages+=" $1"
@@ -256,6 +264,20 @@ case "$command" in
           echo Found $key in the package $package
         fi
       done
+    done
+  ;;
+
+  searchall)
+    for pkg in $packages
+    do
+      printf -v qs 'text=1&arch=%s&grep=%s' $ARCH "$pkg"
+      cd /tmp
+      wget -O matches cygwin.com/cgi-bin2/package-grep.cgi?"$qs"
+      awk '
+      ! /-src\t$/ &&
+      ! mc[$2]++ &&
+      $0=$2
+      ' FS=/ matches
     done
   ;;
 

@@ -49,3 +49,5 @@ open issues.
 ### v0.57
 
 * Tagged Google Code SVN repo status
+=======
+[2013-10-23] added xz archives support, autor: ernierasta
